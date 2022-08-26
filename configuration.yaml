@@ -1,0 +1,25 @@
+homeassistant:
+  customize: !include settings/anpassning.yaml
+
+# Loads default set of integrations. Do not remove.
+default_config:
+
+automation: !include automations.yaml
+binary_sensor: !include binary_sensors.yaml
+group: !include groups/groups.yaml
+google_assistant: !include settings/google_assistant.yaml
+hdmi_cec:
+    host: 58c14403-pi-cec
+http: !include settings/http.yaml
+media_player:
+  - platform: pioneer
+    host: 192.168.4.48
+
+recorder: !include settings/recorder.yaml
+scene: !include scenes.yaml
+sensor: !include sensor.yaml
+#sensor Xbox: !include XboxApi.yaml //Denna använder vi för xapi.us integrationen för Xbox istället för "förstahands valet"
+script: !include scripts.yaml
+tts:    # Text to speech
+  - platform: google_translate
+spotcast: !include settings/spotcast.yaml

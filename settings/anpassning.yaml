@@ -1,0 +1,13 @@
+input_boolean.dammsug_kok:
+  room_id: "16"
+input_boolean.dammsug_sovrum:
+  room_id: "17"
+input_boolean.dammsug_vardagsrum:
+  room_id: "18"
+input_boolean.dammsug_hall:
+  room_id: "19"
+  
+zone.home:
+  latitude: !secret latitude
+  longitude: !secret longitude
+  radius: 20

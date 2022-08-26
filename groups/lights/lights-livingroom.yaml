@@ -1,0 +1,6 @@
+#- platform: group
+#  name: "Taklampa Vardagsrum"
+#  entities:
+#   - light.taklampa
+#   - light.taklampa_2
+#   - light.taklampa_3

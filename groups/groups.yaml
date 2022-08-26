@@ -1,0 +1,7 @@
+dammsug_rum:
+ name: Dammsug Rum
+ entities:
+   - input_boolean.dammsug_kok
+   - input_boolean.dammsug_sovrum
+   - input_boolean.dammsug_vardagsrum
+   - input_boolean.dammsug_hall

@@ -1,0 +1,7 @@
+sp_dc: !secret pappa_sp_dc
+sp_key: !secret pappa_sp_key
+
+accounts:
+    pappa:
+        sp_dc: !secret pappa_sp_dc
+        sp_key: !secret pappa_sp_key

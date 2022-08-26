@@ -1,0 +1,28 @@
+- id: '1628543471211'
+  name: Taklampa Vardagsrum
+  entities:
+    light.taklampa:
+      min_mireds: 153
+      max_mireds: 454
+      supported_color_modes:
+      - color_temp
+      friendly_name: Taklampa 1
+      supported_features: 43
+      state: unavailable
+    light.taklampa_3:
+      min_mireds: 153
+      max_mireds: 454
+      supported_color_modes:
+      - color_temp
+      friendly_name: Taklampa 2
+      supported_features: 43
+      state: unavailable
+    light.taklampa_4:
+      min_mireds: 153
+      max_mireds: 454
+      supported_color_modes:
+      - color_temp
+      friendly_name: Taklampa 3
+      supported_features: 43
+      state: unavailable
+  icon: hass:lightbulb
