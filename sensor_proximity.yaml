@@ -1,0 +1,85 @@
+  home:
+      devices:
+      - person.alexander_hans_olof_rogling
+      - person.linn_hanna_michell_karlsson
+      - person.nova_ebba_mariana_karlsson
+      tolerance: 15
+      unit_of_measurement: m
+
+  farbror_niklas:
+      devices:
+      - person.alexander_hans_olof_rogling
+      - person.linn_hanna_michell_karlsson
+      - person.nova_ebba_mariana_karlsson
+      tolerance: 100
+
+  farfar:
+      devices:
+      - person.alexander_hans_olof_rogling
+      - person.linn_hanna_michell_karlsson
+      - person.nova_ebba_mariana_karlsson
+      tolerance: 30
+      
+  farmor:
+      devices:
+      - person.alexander_hans_olof_rogling
+      - person.linn_hanna_michell_karlsson
+      - person.nova_ebba_mariana_karlsson
+      tolerance: 100
+
+  gammel_farmor:
+      devices:
+      - person.alexander_hans_olof_rogling
+      - person.linn_hanna_michell_karlsson
+      - person.nova_ebba_mariana_karlsson
+      tolerance: 30
+
+  jordbro:
+      devices:
+      - person.alexander_hans_olof_rogling
+      - person.linn_hanna_michell_karlsson
+      - person.nova_ebba_mariana_karlsson
+      tolerance: 100
+      unit_of_measurement: m
+
+  landet:
+      devices:
+      - person.alexander_hans_olof_rogling
+      - person.linn_hanna_michell_karlsson
+      - person.nova_ebba_mariana_karlsson
+      tolerance: 20
+
+  landet_badet:
+      devices:
+      - person.alexander_hans_olof_rogling
+      - person.linn_hanna_michell_karlsson
+      - person.nova_ebba_mariana_karlsson
+      tolerance: 10
+
+  maria:
+      devices:
+      - person.alexander_hans_olof_rogling
+      - person.linn_hanna_michell_karlsson
+      - person.nova_ebba_mariana_karlsson
+      tolerance: 20
+      
+  parkering_farbror_niklas:
+      devices:
+      - person.alexander_hans_olof_rogling
+      - person.linn_hanna_michell_karlsson
+      - person.nova_ebba_mariana_karlsson
+      tolerance: 20
+
+  parkering_farfar:
+      devices:
+      - person.alexander_hans_olof_rogling
+      - person.linn_hanna_michell_karlsson
+      - person.nova_ebba_mariana_karlsson
+      tolerance: 20
+
+  parkering_hemma:
+      devices:
+      - person.alexander_hans_olof_rogling
+      - person.linn_hanna_michell_karlsson
+      - person.nova_ebba_mariana_karlsson
+      tolerance: 20

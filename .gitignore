@@ -1,0 +1,29 @@
+#lista över vitlistade filer/mappar med !, dessa kommer icke att ignoreras
+!.yaml
+!.gitignore
+!*.md
+
+#Ignorera mappar
+.storage
+.cloud
+.uuid
+custom_components
+images/
+image/
+tts
+
+#Ignorera följande filer
+google_assistant.json
+ip_bans.yaml
+secrets.yaml
+known_devices.yaml
+google_calendars.yaml
+scheman.yaml
+*.log
+*.log.*
+*.db
+*.db-journal
+*.crt
+*.csr
+*.key
+

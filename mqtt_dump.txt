@@ -1,0 +1,2 @@
+brytare/vardagsrum/stat/Garfield_AC80ED/BUTTON2T,{"TRIG":"DOUBLE"}
+brytare/vardagsrum/stat/Garfield_AC80ED/BUTTON2T,{"TRIG":"DOUBLE"}

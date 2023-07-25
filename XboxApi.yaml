@@ -1,0 +1,23 @@
+#sensor:
+- platform: xbox_live
+  api_key: !secret xbox_live_api_key
+  xuid:
+    - 2533274885172767 #Alexander
+    - 2535459686055148 #Niklas
+
+#sensor:
+- platform: history_stats
+  name: Sylwester Xbox
+  entity_id: sensor.sylwester112
+  state: "Online"
+  type: time
+  start: "{{ as_timestamp( now().replace(hour=0).replace(minute=0).replace(second=0) ) - now().weekday() * 86400 }}"
+  end: "{{ now() }}"
+
+- platform: history_stats
+  name: Alexander Xbox
+  entity_id: sensor.alex_rogling
+  state: "Online"
+  type: time
+  start: "{{ as_timestamp( now().replace(hour=0).replace(minute=0).replace(second=0) ) - now().weekday() * 86400 }}"
+  end: "{{ now() }}"

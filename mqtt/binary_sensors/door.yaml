@@ -1,0 +1,13 @@
+#####################################################
+# Door Switches (433mhz)                            #
+#####################################################
+- name: "Magnet sensor Ytterdörren"
+  unique_id: D5R2F5H9-3T4E-1Y8Q-7Z2L-0D6W9A3S2J4P
+  device_class: door
+  state_topic: brygga/hall/rfbrygga/tele/RESUL
+  payload_on: '7F0703'
+  payload_off: '7F0709'
+  force_update: false
+  availability_topic: brygga/hall/rfbrygga/tele/LWT
+  payload_available: Online
+  payload_not_available: Offline

@@ -1,0 +1,13 @@
+#####################################################
+# Magnect contacts (433mhz)                         #
+#####################################################
+- name: "Magnet sensor köks fönster"
+  unique_id: A8G5B9O2-3L6H-4Z0R-1N9F-7Y6E3K2P1M4V
+  device_class: window
+  state_topic: brygga/hall/rfbrygga/tele/RESULT
+  payload_on:  '826C03'
+  payload_off: '826C09'
+  force_update: false
+  availability_topic: RFBridge2/tele/LWT
+  payload_available: Online
+  payload_not_available: Offline

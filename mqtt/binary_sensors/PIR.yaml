@@ -1,0 +1,28 @@
+#####################################################
+# PIR Sensors (433mhz)                              #
+#####################################################
+- name: "Pir Vardagsrummet"
+  unique_id: G1I4L3C2-7T6N-9Q5M-0E8H-2F7O4B1U9V3D
+  device_class: motion
+  state_topic: brygga/hall/rfbrygga/tele/RESULT
+  payload_on: '158426'
+  off_delay: 60
+  force_update: false
+  availability_topic: brygga/hall/rfbrygga/tele/LWT
+  payload_available: Online
+  payload_not_available: Offline
+
+   
+#
+#    - platform: mqtt
+#      name: "Larmpanel status"
+#      state_topic: "brygga/hall/rfbrygga/tele/RESULT"
+#      value_template: "{{value_json.RfReceived.Data}}"
+#      payload_on: "AAB00F0408013604F61CD404CE381818281855"
+#      qos: 1
+
+#    - platform: mqtt
+#      name: "Gustav22"
+#      state_topic: "brygga/hall/rfbrygga/tele/RESULT"
+#      payload_on: "AAB00B0308012C04E204D828180855"
+#      off_delay: 4

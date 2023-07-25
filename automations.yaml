@@ -1,0 +1,1601 @@
+- id: '1608384990470'
+  alias: Kungör för Frysen
+  description: En kungörelse om att frysen är för kall eller är öppen
+  trigger:
+  - type: temperature
+    platform: device
+    device_id: e2f871e5164b2ff58b2c33e5041f5f2d
+    entity_id: sensor.lumi_lumi_weather_4b4c4005_temperature
+    domain: sensor
+    above: -14
+    id: frys öppen
+  - type: temperature
+    platform: device
+    device_id: e2f871e5164b2ff58b2c33e5041f5f2d
+    entity_id: sensor.lumi_lumi_weather_4b4c4005_temperature
+    domain: sensor
+    below: -18
+    id: frys för kall
+  condition:
+  - condition: state
+    entity_id: person.alexander_hans_olof_rogling
+    state: home
+  - condition: and
+    conditions:
+    - condition: not
+      conditions:
+      - condition: state
+        entity_id: sensor.moto_g_7_plus_do_not_disturb_sensor
+        state: priority_only
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: frys öppen
+      sequence:
+      - service: tts.google_translate_say
+        data:
+          entity_id: media_player.fristaende
+          message: Viktig Kungörelse! Frysen är öppen.
+          language: sv
+          cache: true
+    - conditions:
+      - condition: trigger
+        id: frys för kall
+      sequence:
+      - service: tts.google_translate_say
+        data:
+          message: Viktig Kungörelse! Frysen är för kall.
+          entity_id: media_player.fristaende
+          cache: true
+          language: sv
+    default: []
+  mode: single
+- id: '1608701070614'
+  alias: Stäng av lamporna
+  description: Släck lamporna vid soluppgången eller när lampan i hallen släcks på
+    vardagar mellan 04:00-06:00
+  trigger:
+  - platform: sun
+    event: sunrise
+    id: soluppgång
+  - platform: state
+    from: home
+    entity_id: person.alexander_hans_olof_rogling
+    for: 00:15:00
+    id: pappa_borta
+  - platform: device
+    type: turned_off
+    device_id: 9a1601033053ca37cbba87fe915c933c
+    entity_id: light.lumi_lumi_switch_l0agl1_on_off
+    domain: light
+    id: Hallen_brytare
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: soluppgång
+      sequence:
+      - service: script.stang_av_lampor
+    - conditions:
+      - condition: trigger
+        id: pappa_borta
+      sequence:
+      - service: script.stang_av_lampor
+    - conditions:
+      - condition: trigger
+        id: Hallen_brytare
+      - condition: and
+        conditions:
+        - condition: time
+          after: 04:00
+          before: 06:00
+          weekday:
+          - mon
+          - tue
+          - wed
+          - thu
+          - fri
+      sequence:
+      - service: script.stang_av_lampor
+    default: []
+  mode: single
+- id: '1608701817213'
+  alias: Kontrollera lampor
+  description: 'Tänd alla lamporna om det är solnedgång och ingen är hemma,
+
+    Annars så tänd lamporna när någon  är på väg hemåt och har mindre än 121 meter
+    kvar.
+
+
+    När alla har lämnat hemmet mer än 125 meter så släck alla lampor samt stäng av
+    TVn om den är på.'
+  trigger:
+  - platform: numeric_state
+    entity_id: proximity.home
+    id: almost_home
+    below: '120'
+    above: '0'
+  - platform: numeric_state
+    entity_id: proximity.home
+    id: leaving_home
+    above: '121'
+    below: '999999'
+    for:
+      hours: 0
+      minutes: 2
+      seconds: 0
+  - platform: sun
+    event: sunset
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.to_state.attributes.dir_of_travel == "arrived"
+          }}'
+      sequence:
+      - service: script.satt_pa_alla_lampor
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.to_state.attributes.dir_of_travel == "away_from"
+          }}'
+      - condition: template
+        value_template: '{{ not is_state(''person.alexander_hans_olof_rogling'' ,
+          ''home'') and not is_state(''linn_hanna_michell_karlsson'', ''home'') and
+          not is_state(''nova_ebba_mariana_karlsson'', ''home'') }}'
+      sequence:
+      - service: script.stang_av_lampor
+      - condition: device
+        device_id: 2efc73dad7d25d98f68c07a685066b23
+        domain: media_player
+        entity_id: media_player.philips_tv
+        type: is_on
+      - service: remote.toggle
+        target:
+          entity_id: remote.philips_tv
+    default: []
+  mode: single
+- id: '1608837347211'
+  alias: Bränslevärmare landet
+  description: Startar bränslevärmare om kallare än +10c
+  trigger:
+  - platform: time
+    at: 05:00:00
+  condition:
+  - condition: time
+    weekday:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
+  - condition: and
+    conditions:
+    - condition: zone
+      entity_id: device_tracker.touran_1_0_cl_bt085_tsim6
+      zone: zone.landet
+    - condition: and
+      conditions:
+      - condition: numeric_state
+        entity_id: weather.landet
+        attribute: temperature
+        below: '10'
+  action:
+  - service: switch.turn_on
+    data: {}
+    entity_id: switch.touran_1_0_cl_bt085_tsim6_combustion_engine_heating
+  - service: notify.mobile_app_moto_g_7_plus
+    data:
+      message: Jag har försökt starta bränslevärmare
+  mode: single
+- id: '1608841081133'
+  alias: G7 laddning
+  description: Notifiering triggas genom blinka bestämda lampor efter 20:00 i max
+    15min. För bli påmind att lägga pappas telefon på laddning eller att lägga telefonen
+    på laddning om batterinivån är under 30%/15℅
+  trigger:
+  - platform: time
+    at: '20:00'
+    id: sovdags
+  - platform: numeric_state
+    entity_id: sensor.moto_g_7_plus_battery_level
+    below: '30'
+    id: Ladda pappas telefon
+  - platform: numeric_state
+    entity_id: sensor.moto_g_7_plus_battery_level
+    id: Ladda pappas telefon 15
+    below: '15'
+  condition:
+  - condition: zone
+    entity_id: person.alexander_hans_olof_rogling
+    zone: zone.home
+  - type: is_not_plugged_in
+    condition: device
+    device_id: b752c1b397af4d52f89cba674ca5ed8c
+    entity_id: binary_sensor.moto_g_7_plus_is_charging
+    domain: binary_sensor
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 0
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: sovdags
+      - condition: template
+        value_template: '{{ ((as_timestamp(states.calendar.webcal_app_quinyx_com_webcal_id_80825b9f40f24d3a8117449b60fcb538.attributes.start_time)
+          - as_timestamp(now())) < 43200) and ((as_timestamp(states.calendar.webcal_app_quinyx_com_webcal_id_80825b9f40f24d3a8117449b60fcb538.attributes.start_time)
+          - as_timestamp(now())) > 0) and state_attr(''calendar.webcal_app_quinyx_com_webcal_id_80825b9f40f24d3a8117449b60fcb538'',
+          ''message'') == "q: Arbetsdag" }}'
+      sequence:
+      - device_id: b752c1b397af4d52f89cba674ca5ed8c
+        domain: mobile_app
+        type: notify
+        message: dags att sova!
+        title: Viktigt Meddelande
+      - service: tts.google_translate_say
+        data:
+          entity_id: media_player.Sovrum
+          message: Dags att sova.
+          language: sv
+      - repeat:
+          while:
+          - type: is_not_plugged_in
+            condition: device
+            device_id: b752c1b397af4d52f89cba674ca5ed8c
+            entity_id: binary_sensor.moto_g_7_plus_is_charging
+            domain: binary_sensor
+            for:
+              hours: 0
+              minutes: 15
+              seconds: 0
+              milliseconds: 0
+          sequence:
+          - service: script.blinka_alla_lampor
+      - type: is_plugged_in
+        condition: device
+        device_id: b752c1b397af4d52f89cba674ca5ed8c
+        entity_id: binary_sensor.moto_g_7_plus_is_charging
+        domain: binary_sensor
+        for:
+          hours: 0
+          minutes: 0
+          seconds: 10
+          milliseconds: 0
+      - service: script.stang_av_lampor
+    - conditions:
+      - condition: trigger
+        id: Ladda pappas telefon
+      sequence:
+      - service: tts.google_translate_say
+        data:
+          entity_id: media_player.sovrum
+          cache: true
+          language: sv
+          message: Alexander din Moto G7 Plus behöver ladddas
+    - conditions:
+      - condition: trigger
+        id: Ladda pappas telefon 15
+      sequence:
+      - service: tts.google_translate_say
+        data:
+          entity_id: media_player.sovrum
+          cache: true
+          language: sv
+          message: Alexander din Moto G7 Plus behöver ladddas
+    default: []
+  mode: single
+- id: '1609181530781'
+  alias: Inkommande Samtal
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: sensor.moto_g_7_plus_phone_state
+    id: inkommande samtal
+    to: ringing
+  - platform: state
+    entity_id: sensor.moto_g_7_plus_phone_state
+    id: avslutat samtal
+    to: idle
+  condition:
+  - condition: zone
+    entity_id: person.alexander_hans_olof_rogling
+    zone: zone.home
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: inkommande samtal
+      sequence:
+      - service: script.media_pausa
+      - repeat:
+          while:
+          - condition: state
+            entity_id: sensor.moto_g_7_plus_phone_state
+            state: ringing
+          sequence:
+          - service: script.blinka_alla_lampor
+    - conditions:
+      - condition: trigger
+        id: avslutat samtal
+      sequence:
+      - service: script.ateruppta_spelningar
+    default: []
+  mode: single
+- id: '1609360948459'
+  alias: Nattbelysning för toabesök
+  description: Tänder utvalda lampor vagt för att ge tillräckligt med ljus för att
+    se utan att riskera väcka alla
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.pir_vardagsrummet
+    to: 'on'
+  condition:
+  - condition: time
+    after: '20:00'
+    before: 04:00
+    weekday:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
+  - condition: and
+    conditions:
+    - type: is_plugged_in
+      condition: device
+      device_id: b752c1b397af4d52f89cba674ca5ed8c
+      entity_id: binary_sensor.moto_g_7_plus_is_charging
+      domain: binary_sensor
+    - condition: and
+      conditions:
+      - condition: device
+        type: is_off
+        device_id: eac53bb738b0dfe6262e7d10c6916564
+        entity_id: light.ledstrip
+        domain: light
+        for:
+          hours: 0
+          minutes: 10
+          seconds: 0
+  action:
+  - service: script.nattbelysning_for_toalett_besok
+    data: {}
+  mode: single
+- id: '1614940805859'
+  alias: Belysning Köket
+  description: Styr belysningen som är "smart" ute i köket
+  trigger:
+  - platform: device
+    domain: tasmota
+    device_id: f1446bc30a8b0777ae408524cc8c6e8d
+    type: button_short_press
+    subtype: button_2
+    discovery_id: DC4F22AC80ED_button_2_SINGLE
+    id: All belysning köket
+  - platform: device
+    domain: tasmota
+    device_id: f1446bc30a8b0777ae408524cc8c6e8d
+    type: button_double_press
+    subtype: button_2
+    discovery_id: DC4F22AC80ED_button_2_DOUBLE
+    id: Diskho belysning
+  - platform: device
+    domain: tasmota
+    device_id: f1446bc30a8b0777ae408524cc8c6e8d
+    type: button_long_press
+    subtype: button_1
+    discovery_id: DC4F22AC80ED_button_1_HOLD
+    id: takfläkt lampa
+  - platform: device
+    type: turned_on
+    device_id: 21d5e9dda8753cd092dc357b5193962d
+    entity_id: 700699c35a7d300fb0c69f5b28c679a8
+    domain: switch
+    id: test
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: All belysning köket
+      - condition: trigger
+        id:
+        - test
+      sequence:
+      - service: light.toggle
+        target:
+          area_id: kok
+        data: {}
+    - conditions:
+      - condition: trigger
+        id: Diskho belysning
+      sequence:
+      - service: input_boolean.toggle
+        target:
+          entity_id: input_boolean.manuell_led_diskhon
+        data: {}
+    - conditions:
+      - condition: trigger
+        id: takfläkt lampa
+      sequence:
+      - type: toggle
+        device_id: b9c635dc90455d1aefded182dfdae9ec
+        entity_id: light.koksflaktslampa
+        domain: light
+    default: []
+  mode: single
+- id: '1614940976382'
+  alias: Taklampa vardagsrum
+  description: Växla statusen på T1Touch knapp 1
+  trigger:
+  - platform: device
+    domain: tasmota
+    device_id: f1446bc30a8b0777ae408524cc8c6e8d
+    type: button_short_press
+    subtype: button_1
+    discovery_id: DC4F22AC80ED_button_1_SINGLE
+  condition: []
+  action:
+  - service: homeassistant.toggle
+    target:
+      entity_id: light.taklampa_vardagsrum
+  mode: single
+- id: '1628001338797'
+  alias: Aquara cub Media Spelas
+  description: ''
+  trigger:
+  - device_id: 7b63b206831b3d9db1675f9160b7663c
+    domain: zha
+    platform: device
+    type: device_rotated
+    subtype: right
+    id: höger
+  - device_id: 7b63b206831b3d9db1675f9160b7663c
+    domain: zha
+    platform: device
+    type: device_rotated
+    subtype: left
+    id: vänster
+  - device_id: 7b63b206831b3d9db1675f9160b7663c
+    domain: zha
+    platform: device
+    type: device_knocked
+    subtype: face_1
+    id: knackad med bildsida 1
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: device
+        device_id: 15124b30475f8b83ed3e2c68d66f64da
+        domain: media_player
+        entity_id: media_player.chromecast8863
+        type: is_playing
+      - condition: trigger
+        id: höger
+      sequence:
+      - service: hdmi_cec.volume
+        data:
+          up: 1
+    - conditions:
+      - condition: device
+        device_id: 15124b30475f8b83ed3e2c68d66f64da
+        domain: media_player
+        entity_id: media_player.chromecast8863
+        type: is_playing
+      - condition: trigger
+        id: vänster
+      sequence:
+      - service: hdmi_cec.volume
+        data:
+          down: 1
+    - conditions:
+      - condition: device
+        device_id: 989b9c392fb2dd0cd5615cd6dc4424ea
+        domain: media_player
+        entity_id: media_player.nova
+        type: is_playing
+      - condition: and
+        conditions:
+        - condition: not
+          conditions:
+          - condition: device
+            device_id: 15124b30475f8b83ed3e2c68d66f64da
+            domain: media_player
+            entity_id: media_player.chromecast8863
+            type: is_playing
+      - condition: trigger
+        id: höger
+      sequence:
+      - service: media_player.volume_up
+        target:
+          device_id: 989b9c392fb2dd0cd5615cd6dc4424ea
+    - conditions:
+      - condition: device
+        device_id: 989b9c392fb2dd0cd5615cd6dc4424ea
+        domain: media_player
+        entity_id: media_player.nova
+        type: is_playing
+      - condition: and
+        conditions:
+        - condition: not
+          conditions:
+          - condition: device
+            device_id: 15124b30475f8b83ed3e2c68d66f64da
+            domain: media_player
+            entity_id: media_player.chromecast8863
+            type: is_playing
+        - condition: trigger
+          id: vänster
+      sequence:
+      - service: media_player.volume_down
+        target:
+          device_id: 989b9c392fb2dd0cd5615cd6dc4424ea
+    - conditions:
+      - condition: device
+        device_id: 2150df3ea55f796d05c3a57cb1478fd7
+        domain: media_player
+        entity_id: media_player.rosen
+        type: is_playing
+      - condition: and
+        conditions:
+        - condition: not
+          conditions:
+          - condition: device
+            device_id: 15124b30475f8b83ed3e2c68d66f64da
+            domain: media_player
+            entity_id: media_player.chromecast8863
+            type: is_playing
+          - condition: or
+            conditions:
+            - condition: device
+              device_id: 989b9c392fb2dd0cd5615cd6dc4424ea
+              domain: media_player
+              entity_id: media_player.nova
+              type: is_playing
+        - condition: trigger
+          id: höger
+      sequence:
+      - service: media_player.volume_up
+        target:
+          device_id: 2150df3ea55f796d05c3a57cb1478fd7
+    - conditions:
+      - condition: device
+        device_id: 2150df3ea55f796d05c3a57cb1478fd7
+        domain: media_player
+        entity_id: media_player.rosen
+        type: is_playing
+      - condition: and
+        conditions:
+        - condition: not
+          conditions:
+          - condition: device
+            device_id: 15124b30475f8b83ed3e2c68d66f64da
+            domain: media_player
+            entity_id: media_player.chromecast8863
+            type: is_playing
+          - condition: or
+            conditions:
+            - condition: device
+              device_id: 989b9c392fb2dd0cd5615cd6dc4424ea
+              domain: media_player
+              entity_id: media_player.nova
+              type: is_playing
+        - condition: trigger
+          id: vänster
+      sequence:
+      - service: media_player.volume_down
+        target:
+          device_id: 2150df3ea55f796d05c3a57cb1478fd7
+    - conditions:
+      - condition: device
+        device_id: 1d8cd6cdae3f9b39f7581a652d981610
+        domain: media_player
+        entity_id: media_player.sovrum
+        type: is_playing
+      - condition: and
+        conditions:
+        - condition: not
+          conditions:
+          - condition: device
+            device_id: 15124b30475f8b83ed3e2c68d66f64da
+            domain: media_player
+            entity_id: media_player.chromecast8863
+            type: is_playing
+          - condition: or
+            conditions:
+            - condition: device
+              device_id: 989b9c392fb2dd0cd5615cd6dc4424ea
+              domain: media_player
+              entity_id: media_player.nova
+              type: is_playing
+            - condition: or
+              conditions:
+              - condition: device
+                device_id: 2150df3ea55f796d05c3a57cb1478fd7
+                domain: media_player
+                entity_id: media_player.rosen
+                type: is_playing
+      - condition: trigger
+        id: höger
+      sequence:
+      - service: media_player.volume_up
+        target:
+          device_id: 1d8cd6cdae3f9b39f7581a652d981610
+    - conditions:
+      - condition: device
+        device_id: 1d8cd6cdae3f9b39f7581a652d981610
+        domain: media_player
+        entity_id: media_player.sovrum
+        type: is_playing
+      - condition: and
+        conditions:
+        - condition: not
+          conditions:
+          - condition: device
+            device_id: 15124b30475f8b83ed3e2c68d66f64da
+            domain: media_player
+            entity_id: media_player.chromecast8863
+            type: is_playing
+          - condition: or
+            conditions:
+            - condition: device
+              device_id: 989b9c392fb2dd0cd5615cd6dc4424ea
+              domain: media_player
+              entity_id: media_player.nova
+              type: is_playing
+            - condition: or
+              conditions:
+              - condition: device
+                device_id: 2150df3ea55f796d05c3a57cb1478fd7
+                domain: media_player
+                entity_id: media_player.rosen
+                type: is_playing
+        - condition: trigger
+          id: vänster
+      sequence:
+      - service: media_player.volume_down
+        target:
+          device_id: 1d8cd6cdae3f9b39f7581a652d981610
+    - conditions:
+      - condition: device
+        device_id: 15124b30475f8b83ed3e2c68d66f64da
+        domain: media_player
+        entity_id: media_player.chromecast8863
+        type: is_playing
+      - condition: and
+        conditions:
+        - condition: trigger
+          id: knackad med bildsida 1
+      sequence:
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.mediaplayer_paused_using_aquara_cube
+        data:
+          value: 1
+      - service: media_player.media_pause
+        target:
+          entity_id: media_player.chromecast8863
+    - conditions:
+      - condition: device
+        device_id: 989b9c392fb2dd0cd5615cd6dc4424ea
+        domain: media_player
+        entity_id: media_player.nova
+        type: is_playing
+      - condition: and
+        conditions:
+        - condition: not
+          conditions:
+          - condition: device
+            device_id: 15124b30475f8b83ed3e2c68d66f64da
+            domain: media_player
+            entity_id: media_player.chromecast8863
+            type: is_playing
+        - condition: trigger
+          id: knackad med bildsida 1
+      sequence:
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.mediaplayer_paused_using_aquara_cube
+        data:
+          value: 2
+      - service: media_player.media_pause
+        target:
+          entity_id: media_player.nova
+    - conditions:
+      - condition: device
+        device_id: 2150df3ea55f796d05c3a57cb1478fd7
+        domain: media_player
+        entity_id: media_player.rosen
+        type: is_playing
+      - condition: and
+        conditions:
+        - condition: not
+          conditions:
+          - condition: device
+            device_id: 15124b30475f8b83ed3e2c68d66f64da
+            domain: media_player
+            entity_id: media_player.chromecast8863
+            type: is_playing
+          - condition: or
+            conditions:
+            - condition: device
+              device_id: 989b9c392fb2dd0cd5615cd6dc4424ea
+              domain: media_player
+              entity_id: media_player.nova
+              type: is_playing
+        - condition: trigger
+          id: knackad med bildsida 1
+      sequence:
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.mediaplayer_paused_using_aquara_cube
+        data:
+          value: 3
+      - service: media_player.media_pause
+        target:
+          entity_id: media_player.rosen
+    - conditions:
+      - condition: device
+        device_id: 1d8cd6cdae3f9b39f7581a652d981610
+        domain: media_player
+        entity_id: media_player.sovrum
+        type: is_playing
+      - condition: and
+        conditions:
+        - condition: not
+          conditions:
+          - condition: device
+            device_id: 15124b30475f8b83ed3e2c68d66f64da
+            domain: media_player
+            entity_id: media_player.chromecast8863
+            type: is_playing
+          - condition: or
+            conditions:
+            - condition: device
+              device_id: 989b9c392fb2dd0cd5615cd6dc4424ea
+              domain: media_player
+              entity_id: media_player.nova
+              type: is_idle
+            - condition: or
+              conditions:
+              - condition: device
+                device_id: 2150df3ea55f796d05c3a57cb1478fd7
+                domain: media_player
+                entity_id: media_player.rosen
+                type: is_playing
+        - condition: trigger
+          id: knackad med bildsida 1
+      sequence:
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.mediaplayer_paused_using_aquara_cube
+        data:
+          value: 4
+      - service: media_player.media_pause
+        target:
+          entity_id: media_player.sovrum
+    default:
+    - choose:
+      - conditions:
+        - condition: numeric_state
+          entity_id: input_number.mediaplayer_paused_using_aquara_cube
+          above: '0'
+          below: '2'
+        sequence:
+        - service: media_player.media_play
+          target:
+            entity_id: media_player.chromecast8863
+        - service: input_number.set_value
+          target:
+            entity_id: input_number.mediaplayer_paused_using_aquara_cube
+          data:
+            value: 0
+      - conditions:
+        - condition: numeric_state
+          entity_id: input_number.mediaplayer_paused_using_aquara_cube
+          above: '1'
+          below: '3'
+        sequence:
+        - service: media_player.media_play
+          target:
+            entity_id: media_player.nova
+        - service: input_number.set_value
+          data:
+            value: 0
+          target:
+            entity_id: input_number.mediaplayer_paused_using_aquara_cube
+      - conditions:
+        - condition: numeric_state
+          entity_id: input_number.mediaplayer_paused_using_aquara_cube
+          above: '2'
+          below: '4'
+        sequence:
+        - service: media_player.media_play
+          target:
+            entity_id: media_player.rosen
+        - service: input_number.set_value
+          target:
+            entity_id: input_number.mediaplayer_paused_using_aquara_cube
+          data:
+            value: 0
+      - conditions:
+        - condition: numeric_state
+          entity_id: input_number.mediaplayer_paused_using_aquara_cube
+          above: '3'
+          below: '5'
+        sequence:
+        - service: media_player.media_play
+          target:
+            entity_id: media_player.sovrum
+        - service: input_number.set_value
+          target:
+            entity_id: input_number.mediaplayer_paused_using_aquara_cube
+          data:
+            value: 0
+      default: []
+  mode: queued
+  max: 10
+- id: '1628587642565'
+  alias: Vattenkokare
+  description: Vi startar vattenkokaren samt förhindrar annonsering av att vattenkokaren
+    är färdig om vi avbryter innan det hart gått 00:03:20 sedan vi startade vattenkokaren
+  trigger:
+  - platform: device
+    domain: tasmota
+    device_id: f1446bc30a8b0777ae408524cc8c6e8d
+    type: button_short_press
+    subtype: button_3
+    discovery_id: DC4F22AC80ED_button_3_SINGLE
+    id: T1 kort
+  - platform: device
+    domain: tasmota
+    device_id: 6e4da44ab701b0df663fa3f550062d0d
+    type: button_double_press
+    subtype: button_1
+    discovery_id: 807D3A347566_button_1_SINGLE
+    id: Vattenkokare kort
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.vattenkokaren
+    id: timer_fardig
+  - platform: state
+    entity_id: input_boolean.vattenkokare
+    id: virtuell brytare
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: timer_fardig
+      sequence:
+      - service: script.stang_av_vattenkokare
+      - service: media_player.play_media
+        target:
+          entity_id: media_player.miio_gateway
+        data:
+          media_content_id: '12'
+          media_content_type: music
+      - service: tts.google_translate_say
+        data:
+          entity_id: media_player.fristaende
+          message: Vattenkokaren är färdig.
+          cache: true
+          language: sv
+      - device_id: b752c1b397af4d52f89cba674ca5ed8c
+        domain: mobile_app
+        type: notify
+        message: Vattenkokaren är klar
+        title: information
+    - conditions:
+      - condition: trigger
+        id: T1 kort
+      sequence:
+      - service: input_boolean.toggle
+        target:
+          entity_id: input_boolean.vattenkokare
+    - conditions:
+      - condition: trigger
+        id: Vattenkokare kort
+      sequence:
+      - service: input_boolean.toggle
+        target:
+          entity_id: input_boolean.vattenkokare
+    - conditions:
+      - condition: trigger
+        id: virtuell brytare
+      - condition: state
+        entity_id: input_boolean.vattenkokare
+        state: 'off'
+      sequence:
+      - service: script.stang_av_vattenkokare
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.vattenkokare
+        state: 'on'
+      sequence:
+      - service: timer.start
+        data:
+          duration: '0'
+        target:
+          entity_id: timer.vattenkokaren
+      - service: switch.turn_on
+        target:
+          entity_id:
+          - switch.vattenkokare_2
+          - switch.vattenkokare_vardagsrummet
+    default: []
+  mode: queued
+  max: 5
+- id: '1631224181421'
+  alias: Stämmingsbelysning
+  description: ''
+  trigger:
+  - platform: device
+    domain: tasmota
+    device_id: f1446bc30a8b0777ae408524cc8c6e8d
+    type: button_triple_press
+    subtype: button_1
+    discovery_id: DC4F22AC80ED_button_1_TRIPLE
+  condition: []
+  action:
+  - service: mqtt.publish
+    data:
+      payload: backlog rfraw AAB04C0408012C0A3C04E227F638180828082828082808082808280828280828082808280808280828280828080828280828080828082828082808280808282808082808282808082808280828082855;rfraw
+        0
+      topic: brygga/hall/rfbrygga/cmnd/backlog
+  - service: light.turn_on
+    target:
+      entity_id:
+      - light.hue_go_1
+      - light.ledstrip
+      - light.kitchen_sink
+    data:
+      color_name: magenta
+      brightness_pct: 35
+  - service: light.turn_off
+    target:
+      entity_id:
+      - light.koksflaktslampa
+      - light.lumi_lumi_switch_l0agl1_on_off
+      - light.taklampa_vardagsrum
+    data:
+      transition: 7
+  mode: single
+- id: '1638591023781'
+  alias: Påminnelse om att gå och jobba
+  description: Kontrollerar om det är arbetsdag varje dag en och halv timme innan
+    det är dags att jobba och om så är fallet påminner att det är arbetsdag samt påminner
+    i bestämda intervaller
+  trigger:
+  - platform: template
+    value_template: '{{ ((as_timestamp(states.calendar.webcal_app_quinyx_com_webcal_id_80825b9f40f24d3a8117449b60fcb538.attributes.start_time)
+      - as_timestamp(now())) < 5400) and (state_attr(''calendar.webcal_app_quinyx_com_webcal_id_80825b9f40f24d3a8117449b60fcb538'',
+      ''message'') == "q: Arbetsdag") }}'
+    id: En timme kvar tills arbete
+  - platform: state
+    entity_id: binary_sensor.magnet_sensor_ytterdorren
+    to: 'on'
+    id: ytterdörren
+  - platform: event
+    event_type: timer.finished
+    id: Timer arbete
+    event_data:
+      entity_id: timer.arbete
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: En timme kvar tills arbete
+      sequence:
+      - service: tts.google_translate_say
+        data:
+          entity_id: media_player.fristaende
+          message: Det är nu halvtimme kvar max innan du ska gå och jobba så nu börjar
+            jag rutiner för att påminna dig att gå iväg i tid
+          language: sv
+          cache: true
+      - service: timer.start
+        data:
+          duration: 00:10:00
+        target:
+          entity_id: timer.arbete
+      - service: input_number.increment
+        target:
+          entity_id: input_number.paminnelse
+    - conditions:
+      - condition: trigger
+        id: Timer arbete
+      sequence:
+      - condition: numeric_state
+        entity_id: input_number.paminnelse
+        above: '0'
+        below: '2'
+      - service: tts.google_translate_say
+        data:
+          entity_id: media_player.fristaende
+          cache: true
+          language: sv
+          message: Alexander det är nu 20 minuter kvar innan du måste röra dig till
+            arbete.
+      - service: input_number.increment
+        target:
+          entity_id: input_number.paminnelse
+      - service: timer.start
+        data:
+          duration: 00:10:00
+        target:
+          entity_id: timer.arbete
+    - conditions:
+      - condition: numeric_state
+        entity_id: input_number.paminnelse
+        above: '1'
+        below: '3'
+      - condition: trigger
+        id: Timer arbete
+      sequence:
+      - service: tts.google_translate_say
+        data:
+          entity_id: media_player.fristaende
+          message: Alexander det är nu 10 minuter kvar innan du måste röra dig till
+            arbete.
+          cache: true
+          language: sv
+      - service: input_number.increment
+        target:
+          entity_id: input_number.paminnelse
+      - service: timer.start
+        data:
+          duration: 00:10:00
+        target:
+          entity_id: timer.arbete
+    - conditions:
+      - condition: trigger
+        id: Timer arbete
+      - condition: numeric_state
+        entity_id: input_number.paminnelse
+        above: '2'
+        below: '4'
+      sequence:
+      - service: tts.google_translate_say
+        data:
+          entity_id: media_player.fristaende
+          message: Alexander det är nu dags att röra dig till arbete.
+          language: sv
+          cache: true
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.paminnelse
+        data:
+          value: 0
+    - conditions:
+      - condition: trigger
+        id: ytterdörren
+      - condition: numeric_state
+        entity_id: input_number.paminnelse
+        above: '0'
+      - condition: state
+        entity_id: sensor.moto_g_7_plus_charger_type
+        state: usb
+      sequence:
+      - service: tts.google_translate_say
+        data:
+          entity_id: media_player.rosen
+          language: 'no'
+          cache: true
+          message: Du Alexander glöm inte telefonen
+    default:
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.paminnelse
+      data:
+        value: 0
+  mode: single
+- id: '1641225666331'
+  alias: ikea
+  description: ''
+  trigger:
+  - device_id: 7a01c21c15fe2752a06e17ab9060211f
+    domain: zha
+    platform: device
+    type: remote_button_short_press
+    subtype: dim_up
+    id: dimup
+  - device_id: 7a01c21c15fe2752a06e17ab9060211f
+    domain: zha
+    platform: device
+    type: remote_button_short_press
+    subtype: turn_on
+    id: start
+  - device_id: 7a01c21c15fe2752a06e17ab9060211f
+    domain: zha
+    platform: device
+    type: remote_button_long_press
+    subtype: turn_on
+    id: meny byte
+  - device_id: 7a01c21c15fe2752a06e17ab9060211f
+    domain: zha
+    platform: device
+    type: remote_button_short_press
+    subtype: dim_down
+    id: dim nedåt
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.temp_2
+    id: återställ köks meny
+  - device_id: 7a01c21c15fe2752a06e17ab9060211f
+    domain: zha
+    platform: device
+    type: remote_button_short_press
+    subtype: right
+    id: höger
+  - device_id: 7a01c21c15fe2752a06e17ab9060211f
+    domain: zha
+    platform: device
+    type: remote_button_short_press
+    subtype: left
+    id: vänster
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: not
+        conditions:
+        - condition: trigger
+          id:
+          - återställ köks meny
+          - meny byte
+      sequence:
+      - service: timer.start
+        data:
+          duration: '0'
+        target:
+          entity_id: timer.temp_2
+    default: []
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: återställ köks meny
+      sequence:
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.koket_meny
+        data:
+          value: 0
+    - conditions:
+      - condition: numeric_state
+        entity_id: input_number.koket_meny
+        below: '1'
+      sequence:
+      - choose:
+        - conditions:
+          - condition: trigger
+            id: start
+          sequence:
+          - service: light.toggle
+            target:
+              area_id: kok
+            data: {}
+        - conditions:
+          - condition: trigger
+            id: dimup
+          sequence:
+          - type: toggle
+            device_id: 06a02818e330bfb97545a2067a7cedcd
+            entity_id: light.koksbanksbelysning_segment_1
+            domain: light
+        - conditions:
+          - condition: trigger
+            id: dim nedåt
+          sequence:
+          - type: toggle
+            device_id: 06a02818e330bfb97545a2067a7cedcd
+            entity_id: light.kitchen_sink
+            domain: light
+        default:
+        - condition: trigger
+          id: meny byte
+        - service: script.1641489918651
+          data: {}
+    - conditions:
+      - condition: numeric_state
+        entity_id: input_number.koket_meny
+        below: '2'
+        above: '0'
+      sequence:
+      - choose:
+        - conditions:
+          - condition: trigger
+            id: start
+          sequence: []
+        default:
+        - condition: trigger
+          id: meny byte
+        - service: script.1641489918651
+          data: {}
+    - conditions:
+      - condition: numeric_state
+        entity_id: input_number.koket_meny
+        above: '1'
+        below: '3'
+      sequence:
+      - choose:
+        - conditions:
+          - condition: trigger
+            id: start
+          sequence: []
+        default: []
+      - service: script.1641489918651
+        data: {}
+    - conditions:
+      - condition: numeric_state
+        entity_id: input_number.koket_meny
+        above: '2'
+        below: '4'
+      sequence:
+      - choose:
+        - conditions:
+          - condition: trigger
+            id: start
+          sequence: []
+        default:
+        - condition: trigger
+          id: meny byte
+        - service: script.1641489918651
+          data: {}
+    - conditions:
+      - condition: numeric_state
+        entity_id: input_number.koket_meny
+        above: '3'
+        below: '5'
+      sequence:
+      - choose:
+        - conditions:
+          - condition: trigger
+            id: start
+          sequence: []
+        default:
+        - condition: trigger
+          id: meny byte
+        - service: script.1641489918651
+          data: {}
+    - conditions:
+      - condition: numeric_state
+        entity_id: input_number.koket_meny
+        above: '4'
+        below: '6'
+      sequence:
+      - choose:
+        - conditions:
+          - condition: trigger
+            id: start
+          - condition: not
+            conditions:
+            - condition: device
+              device_id: 989b9c392fb2dd0cd5615cd6dc4424ea
+              domain: media_player
+              entity_id: media_player.nova
+              type: is_playing
+          sequence:
+          - service: spotcast.start
+            data:
+              entity_id: media_player.nova
+              search: forever angel
+        - conditions:
+          - condition: trigger
+            id: dimup
+          sequence:
+          - service: media_player.volume_up
+            target:
+              entity_id: media_player.nova
+            data: {}
+        - conditions:
+          - condition: trigger
+            id: dim nedåt
+          sequence:
+          - service: media_player.volume_down
+            target:
+              entity_id: media_player.nova
+            data: {}
+        - conditions:
+          - condition: trigger
+            id: vänster
+          - condition: device
+            device_id: 989b9c392fb2dd0cd5615cd6dc4424ea
+            domain: media_player
+            entity_id: media_player.nova
+            type: is_playing
+          sequence:
+          - service: media_player.media_previous_track
+            target:
+              entity_id: media_player.nova
+            data: {}
+        - conditions:
+          - condition: trigger
+            id: höger
+          - condition: device
+            device_id: 989b9c392fb2dd0cd5615cd6dc4424ea
+            domain: media_player
+            entity_id: media_player.nova
+            type: is_playing
+          sequence:
+          - service: media_player.media_next_track
+            target:
+              entity_id: media_player.nova
+            data: {}
+        - conditions:
+          - condition: trigger
+            id: start
+          - condition: device
+            device_id: 989b9c392fb2dd0cd5615cd6dc4424ea
+            domain: media_player
+            entity_id: media_player.nova
+            type: is_playing
+          - condition: or
+            conditions:
+            - condition: device
+              device_id: 989b9c392fb2dd0cd5615cd6dc4424ea
+              domain: media_player
+              entity_id: media_player.nova
+              type: is_paused
+          sequence:
+          - service: media_player.media_play_pause
+            target:
+              entity_id: media_player.nova
+            data: {}
+        default:
+        - condition: trigger
+          id: meny byte
+        - service: script.1641489918651
+          data: {}
+    default:
+    - condition: trigger
+      id: meny byte
+    - service: script.1641489918651
+      data: {}
+  mode: single
+- id: '1641592587702'
+  alias: Sovrutiner
+  description: ''
+  trigger:
+  - type: not_powered
+    platform: device
+    device_id: 939bf722da62f7910b297ac33561907a
+    entity_id: binary_sensor.ble_toothbrush_5cf821dab273
+    domain: binary_sensor
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 30
+    id: tandborsten avstängd
+  - type: powered
+    platform: device
+    device_id: 939bf722da62f7910b297ac33561907a
+    entity_id: binary_sensor.ble_toothbrush_5cf821dab273
+    domain: binary_sensor
+    id: tandborstend startad
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: time
+        after: '20:00'
+        before: '22:30'
+      - condition: trigger
+        id: tandborsten avstängd
+      sequence:
+      - service: light.turn_off
+        target:
+          entity_id:
+          - light.koksflaktslampa
+          - light.taklampa_vardagsrum
+          - light.lumi_lumi_switch_l0agl1_on_off
+          - light.taklampa_2
+      - service: light.turn_on
+        target:
+          entity_id:
+          - light.koksbanksbelysning_master
+          - light.hue_go_1
+          - light.ledstrip
+        data:
+          color_name: goldenrod
+          brightness: 150
+      - service: light.turn_off
+        target:
+          entity_id:
+          - light.hue_go_1
+          - light.kitchen_sink
+        data:
+          transition: 900
+    - conditions:
+      - condition: trigger
+        id: tandborstend startad
+      - condition: time
+        after: '20:00'
+        before: '22:26'
+      sequence:
+      - service: spotcast.start
+        data:
+          entity_id: media_player.rosen
+          search: håll mitt hjärta (same old story)
+          start_volume: 65
+    default: []
+  mode: single
+- id: '1642229175104'
+  alias: Kungör bränsleväramare
+  description: Kungör för alla fristående Google enheter att status på bränslevärmare
+    är ändrad
+  trigger:
+  - platform: device
+    type: turned_off
+    device_id: 76d6844c8fe92ea0ff187d1504619241
+    entity_id: switch.parking_heater_heating
+    domain: switch
+  - platform: device
+    type: turned_on
+    device_id: 76d6844c8fe92ea0ff187d1504619241
+    entity_id: switch.parking_heater_heating
+    domain: switch
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: person.alexander_hans_olof_rogling
+        state: home
+      sequence:
+      - service: tts.google_translate_say
+        data:
+          entity_id: media_player.fristaende
+          message: Kungörelse touranens bränslevärmare har {% if trigger.to_state.state
+            == 'on' %}satts på{% else %}stängts av{% endif %}
+          language: sv
+    - conditions:
+      - condition: and
+        conditions:
+        - condition: not
+          conditions:
+          - condition: state
+            entity_id: person.alexander_hans_olof_rogling
+            state: home
+      sequence:
+      - service: notify.mobile_app_moto_g_7_plus
+        data:
+          title: Förändring på bilens status
+          message: Kungörelse touranens bränslevärmare har {% if trigger.to_state.state
+            == 'on' %}satts på{% else %}stängts av{% endif %}
+    default: []
+  mode: single
+- id: '1643146890252'
+  alias: Morgon
+  description: triggar saker som ska ske när telefon kopplas ur laddaren på morgon
+    sidan eller ser rörelse vid arbetsdag
+  trigger:
+  - type: not_plugged_in
+    platform: device
+    device_id: b752c1b397af4d52f89cba674ca5ed8c
+    entity_id: binary_sensor.moto_g_7_plus_is_charging
+    domain: binary_sensor
+    id: urkopplad
+  - platform: state
+    entity_id: binary_sensor.pir_vardagsrummet
+    to: 'on'
+    id: rorelse_upptackt
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: urkopplad
+      - condition: time
+        after: 03:59
+        before: 05:00
+        weekday: []
+      sequence:
+      - service: input_boolean.toggle
+        target:
+          entity_id:
+          - input_boolean.laddning_ur_g7
+    - conditions:
+      - condition: time
+        after: 03:59
+        before: 05:00
+        weekday: []
+      - condition: trigger
+        id: rorelse_upptackt
+      sequence:
+      - service: tts.google_translate_say
+        data:
+          entity_id: media_player.fristaende
+          message: Godmorgon alexander, jag har lämnat meddelande på telefonen till
+            dig
+          cache: true
+          language: 'no'
+      - service: input_boolean.toggle
+        target:
+          entity_id: input_boolean.laddning_ur_g7
+    default: []
+  mode: single
+- id: '1643320335353'
+  alias: Dammsugare
+  description: Här ligger saker som är relaterade till olika saker när det gäller
+    damsugaren
+  trigger:
+  - platform: device
+    device_id: f2238b1df79f20d20c106e2960cd2a8f
+    domain: select
+    entity_id: select.wildcat_mode
+    type: current_option_changed
+    id: start
+    from: chargego
+  - platform: zone
+    entity_id: device_tracker.moto_g_7_plus
+    zone: zone.jordbro
+    event: leave
+    id: lamnar_jordbro
+  - platform: zone
+    entity_id: device_tracker.moto_g_7_plus
+    zone: zone.jordbro
+    event: enter
+    id: ankommer_jordbro
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: start
+      - condition: zone
+        entity_id: person.alexander_hans_olof_rogling
+        zone: zone.home
+      sequence:
+      - service: spotcast.start
+        data:
+          entity_id: media_player.fristaende
+          start_volume: 75
+          search: Flygplan
+    - conditions:
+      - condition: trigger
+        id: ankommer_jordbro
+      sequence:
+      - service: vacuum.turn_off
+        target:
+          entity_id: vacuum.wildcat
+    - conditions:
+      - condition: trigger
+        id: lamnar_jordbro
+      sequence:
+      - device_id: f2238b1df79f20d20c106e2960cd2a8f
+        domain: select
+        entity_id: select.wildcat_mode
+        type: select_option
+        option: smart
+      - device_id: f2238b1df79f20d20c106e2960cd2a8f
+        domain: vacuum
+        entity_id: vacuum.wildcat
+        type: clean
+      - service: notify.mobile_app_moto_g_7_plus
+        data:
+          title: Vildkatt
+          message: Du har lämnat Jordbro så jag har börjat städa åt dig
+    - conditions:
+      - condition: trigger
+        id: ankommer_jordbro
+      sequence:
+      - device_id: f2238b1df79f20d20c106e2960cd2a8f
+        domain: vacuum
+        entity_id: vacuum.wildcat
+        type: dock
+      - service: notify.mobile_app_moto_g_7_plus
+        data:
+          title: Vildkatt
+          message: Du har ankommit till Jordbro så jag går hem så jag inte är ivägen
+            för dig
+    default: []
+  mode: single

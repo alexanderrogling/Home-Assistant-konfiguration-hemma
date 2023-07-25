@@ -1,0 +1,233 @@
+satt_pa_alla_lampor:
+  alias: sätt på alla lampor
+  sequence:
+  - type: turn_on
+    device_id: f1446bc30a8b0777ae408524cc8c6e8d
+    entity_id: switch.vardagsrum_taklampa
+    domain: switch
+  - type: turn_on
+    device_id: c0d0c67d9194c0fad628d4ab1804edbe
+    entity_id: light.taklampa_2
+    domain: light
+    brightness_pct: 100
+  - type: turn_on
+    device_id: 47f3adf158977b7fb8640d3706e49af9
+    entity_id: light.taklampa
+    domain: light
+    brightness_pct: 100
+  - type: turn_on
+    device_id: 87ca49cf28928c9e50b6253e71775779
+    entity_id: light.taklampa_3
+    domain: light
+    brightness_pct: 100
+  - type: turn_on
+    device_id: f92db72edd95b5b91b20a6dbcae5fbea
+    entity_id: light.taklampa_4
+    domain: light
+  - type: turn_on
+    device_id: eac53bb738b0dfe6262e7d10c6916564
+    entity_id: light.ledstrip
+    domain: light
+    brightness_pct: 100
+  - type: turn_on
+    device_id: 9a1601033053ca37cbba87fe915c933c
+    entity_id: light.lumi_lumi_switch_l0agl1_on_off
+    domain: light
+  - type: turn_on
+    device_id: 06a02818e330bfb97545a2067a7cedcd
+    entity_id: light.kitchen_sink
+    domain: light
+    brightness_pct: 100
+  - service: mqtt.publish
+    data:
+      topic: brygga/hall/rfbrygga/cmnd/backlog
+      payload: rfraw AAB04C0408012C0A3C04E227F638180828082828082808082808280828280828082808280808280828280828080828280828080828082828082808280808282808082808282808082808280828082855;rfraw
+        0
+  mode: single
+  icon: mdi:lightbulb
+stang_av_lampor:
+  alias: Stäng av alla lampor
+  sequence:
+  - service: light.turn_off
+    target:
+      entity_id:
+      - light.taklampa_vardagsrum
+      - light.ledstrip
+      - light.lumi_lumi_switch_l0agl1_on_off
+      area_id:
+      - sovrum
+      - kok
+  - service: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.manuell_led_diskhon
+  - service: mqtt.publish
+    data:
+      topic: brygga/hall/rfbrygga/cmnd/backlog
+      payload: rfraw AAB04C040801180A5004F6280A38180828082828082808082808280828280828082808280808280828280828080828280828080828082828082808280808282808082808280828082808280828082855;rfraw
+        0
+  mode: single
+  icon: hass:lightbulb
+blinka_alla_lampor:
+  alias: Blinka alla lampor
+  sequence:
+  - type: flash
+    device_id: 47f3adf158977b7fb8640d3706e49af9
+    entity_id: light.taklampa
+    domain: light
+  - type: flash
+    device_id: c0d0c67d9194c0fad628d4ab1804edbe
+    entity_id: light.taklampa_2
+    domain: light
+  - type: flash
+    device_id: f92db72edd95b5b91b20a6dbcae5fbea
+    entity_id: light.taklampa_4
+    domain: light
+  - type: flash
+    device_id: eac53bb738b0dfe6262e7d10c6916564
+    entity_id: light.ledstrip
+    domain: light
+  - type: flash
+    device_id: 400be2ec2155143f97f68dd7581c3c29
+    entity_id: light.hue_go_1
+    domain: light
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 2
+      milliseconds: 0
+  mode: single
+nattbelysning_for_toalett_besok:
+  alias: Nattbelysning för toalett besök
+  sequence:
+  - service: light.turn_on
+    data:
+      rgb_color:
+      - 64
+      - 0
+      - 255
+      transition: 25
+      brightness_pct: 30
+    target:
+      entity_id: light.ledstrip
+      device_id: 400be2ec2155143f97f68dd7581c3c29
+  - delay: 00:00:30
+  - service: light.turn_off
+    data:
+      transition: 30
+    target:
+      device_id:
+      - eac53bb738b0dfe6262e7d10c6916564
+      - 400be2ec2155143f97f68dd7581c3c29
+  mode: single
+  icon: mdi:sleep
+dags_att_vakna:
+  alias: Dags att vakna
+  sequence:
+  - service: light.turn_on
+    data:
+      brightness: 254
+      kelvin: 2700
+      transition: 1800
+    target:
+      area_id: sovrum
+      device_id: eac53bb738b0dfe6262e7d10c6916564
+  - wait_template: ''
+    timeout: '1800'
+  - type: turn_on
+    device_id: 6e4da44ab701b0df663fa3f550062d0d
+    entity_id: switch.kok_vattenkokare
+    domain: switch
+  mode: single
+  icon: hass:power
+media_pausa:
+  alias: Pausa alla media enheter
+  sequence:
+  - service: media_player.media_pause
+    target:
+      entity_id:
+      - media_player.nova
+      - media_player.sovrum
+      - media_player.rosen
+      - media_player.miio_gateway
+      - media_player.chromecast8863
+  mode: single
+  icon: hass:music
+stang_av_vattenkokare:
+  alias: Stäng av vattenkokare
+  sequence:
+  - service: homeassistant.turn_off
+    target:
+      entity_id:
+      - switch.vattenkokare_2
+      - switch.vattenkokare_vardagsrummet
+  - service: timer.cancel
+    target:
+      entity_id: timer.vattenkokaren
+  mode: single
+  icon: hass:water-boiler
+ateruppta_spelningar:
+  sequence:
+  - choose:
+    - conditions:
+      - condition: device
+        device_id: 15124b30475f8b83ed3e2c68d66f64da
+        domain: media_player
+        entity_id: media_player.chromecast8863
+        type: is_paused
+      sequence:
+      - service: media_player.media_play
+        target:
+          entity_id: media_player.chromecast8863
+    - conditions:
+      - condition: device
+        device_id: 989b9c392fb2dd0cd5615cd6dc4424ea
+        domain: media_player
+        entity_id: media_player.nova
+        type: is_paused
+      sequence:
+      - service: media_player.media_play
+        target:
+          entity_id: media_player.nova
+    - conditions:
+      - condition: device
+        device_id: 1d8cd6cdae3f9b39f7581a652d981610
+        domain: media_player
+        entity_id: media_player.sovrum
+        type: is_paused
+      sequence:
+      - service: media_player.media_play
+        target:
+          entity_id: media_player.sovrum
+    - conditions:
+      - condition: device
+        device_id: 2150df3ea55f796d05c3a57cb1478fd7
+        domain: media_player
+        entity_id: media_player.rosen
+        type: is_paused
+      sequence:
+      - service: media_player.media_play
+        target:
+          entity_id: media_player.rosen
+    default: []
+  mode: single
+  alias: återuppta spelningar
+'1641489918651':
+  alias: köks meny bytare
+  sequence:
+  - choose:
+    - conditions:
+      - condition: numeric_state
+        entity_id: input_number.koket_meny
+        above: '4'
+      sequence:
+      - service: input_number.set_value
+        data:
+          value: 0
+        target:
+          entity_id: input_number.koket_meny
+    default:
+    - service: input_number.increment
+      target:
+        entity_id: input_number.koket_meny
+  mode: single
+  icon: mdi:numeric-0

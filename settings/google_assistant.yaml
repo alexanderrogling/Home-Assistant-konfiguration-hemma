@@ -1,0 +1,31 @@
+  project_id: !secret google_assistant_project_id
+  service_account: !include ../google_assistant.json
+  report_state: true
+  exposed_domains:
+      - switch
+      - light
+      - sensor
+      - vacuum
+  entity_config:
+    switch.kitchen_sink_sync_receive:
+      expose: false
+    switch.kitchen_sink_sync_send:
+      expose: false
+    switch.kitchen_sink_nightlight:
+      expose: false
+    switch.vattenkokare_vardagsrummet:
+      expose: false
+    switch.vattenkokare_2:
+      expose: false
+    input_boolean.vattenkokare:
+      expose: true
+    switch.vardagsrum_brytare:
+      expose: false
+    switch.vardagsrum_taklampa:
+      expose: false
+    light.taklampa:
+      expose: false
+    light.taklampa_2:
+      expose: false
+    light.taklampa_4:
+      expose: false

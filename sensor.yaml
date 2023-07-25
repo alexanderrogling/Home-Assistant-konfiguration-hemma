@@ -1,0 +1,8 @@
+#- platform: resrobot
+#  key: d1c1ae62-5476-4f86-bb7b-92e3afa1b4e8
+#  fetch_interval: 10 # Minutes between updating the data
+#  departures:
+#    - stop_id: 740000706
+#      name: Avgångar Jordbro Station
+#      update_name: True # If true name will be something like "Länstrafik buss 1" instead of next bus towards the city_0
+#      max_journeys: 20 # Antal avgångar att fånga
