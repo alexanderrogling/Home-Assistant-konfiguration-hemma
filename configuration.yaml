@@ -5,7 +5,6 @@ homeassistant:
 default_config:
 
 automation: !include automations.yaml
-binary_sensor: !include binary_sensors.yaml
 group: !include groups/groups.yaml
 google_assistant: !include settings/google_assistant.yaml
 http: !include settings/http.yaml
@@ -15,13 +14,13 @@ media_player:
     
 mqtt:
   binary_sensor: !include_dir_merge_list mqtt/binary_sensor/
-  button: !include_dir_merge_list mqtt/button/
-  cover: !include_dir_merge_list mqtt/cover/
-  fan: !include_dir_merge_list mqtt/fan/
-  light: !include_dir_merge_list mqtt/light/
-  lock: !include_dir_merge_list mqtt/lock/
-  sensor: !include_dir_merge_list mqtt/sensor/
-  switch: !include_dir_merge_list mqtt/switch/
+  #button: !include_dir_merge_list mqtt/button/
+  #cover: !include_dir_merge_list mqtt/cover/
+  #fan: !include_dir_merge_list mqtt/fan/
+  #light: !include_dir_merge_list mqtt/light/
+  #lock: !include_dir_merge_list mqtt/lock/
+  #sensor: !include_dir_merge_list mqtt/sensor/
+  #switch: !include_dir_merge_list mqtt/switch/
 proximity: !include settings/proximity.yaml
 recorder: !include settings/recorder.yaml
 scene: !include scenes.yaml
